@@ -14,7 +14,7 @@ void main() {
 class PlotData {
   PlotData(this.name, this.population);
   final dynamic name;
-  final dynamic population;
+  late final dynamic population;
 }
 
 
@@ -27,11 +27,15 @@ class Charts extends StatefulWidget {
 
 class _ChartsState extends State<Charts> {
 
-   List<PlotData> Plottingdata = [];
+
+
+  List<PlotData> Plottingdata = [];
+
+  Map<dynamic,dynamic> temp = {};
 
   void getData() async {
 
-    ByteData data = await rootBundle.load('assets/data.xlsx');
+    ByteData data = await rootBundle.load('assets/Financial_Sample.xlsx');
     var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     var excel = Excel.decodeBytes(bytes);
 
@@ -40,12 +44,30 @@ class _ChartsState extends State<Charts> {
       // print(excel.tables[table]?.maxCols);
       // print(excel.tables[table]?.maxRows);
       for (var row in excel.tables[table]!.rows) {
-        Plottingdata.add(PlotData(row[0]!.value, row[1]!.value));
-        // Plottingdata ?? print("null");
-        // print(row[0]!.value);
+
+        //checking and adding each value to map to remove redundancy
+        if(temp[row[1]!.value] == null){
+          temp[row[1]!.value] = row[7]!.value;
+        }else{
+          temp.update(row[1]!.value, (thisvalue) => thisvalue + row[7]!.value);
+        }
+
+
+
+        //Plottingdata.add(PlotData(row[1]!.value, row[7]!.value));
+        //  print(row[1]!.value);
+        //  print(row[7]!.value);
       }
-      Plottingdata.removeAt(0);
+
+      //transferring data fropm map to list of object
+      temp.forEach((k, v) => Plottingdata.add(PlotData(k, v)));
+
+      //print(temp);
+      print("check1");
+      Plottingdata.removeAt(0); //IMP REMOVE HEADING DATA FROM LIST SO IT CAN BE PLOTTED
+      print("check2");
       for(var data in Plottingdata){
+        print(data.name);
         print(data.population);
       }
     }
@@ -66,7 +88,7 @@ class _ChartsState extends State<Charts> {
         home: Scaffold(
             body: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(64.0),
+                  padding: const EdgeInsets.all(0.0),
                   child: Container(
                       child: SfCartesianChart(
                         // Initialize category axis
@@ -75,7 +97,13 @@ class _ChartsState extends State<Charts> {
                           series: <LineSeries<PlotData, dynamic>>[
                             LineSeries<PlotData, dynamic>(
                               // Bind data source
-                                dataSource:  Plottingdata,
+                                 dataSource:
+                              //   <PlotData>[
+                              //     PlotData('Jan', 35),
+                              //     PlotData('Feb', 28),
+                              //
+                              //   ],
+                              Plottingdata,
                                 xValueMapper: (PlotData myplot, _) => myplot.name,
                                 yValueMapper: (PlotData myplot, _) => myplot.population
                             )
