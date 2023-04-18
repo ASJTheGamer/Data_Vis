@@ -1,3 +1,4 @@
+import 'package:data_vis/loadfile.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:syncfusion_flutter_charts/sparkcharts.dart';
@@ -8,7 +9,7 @@ import 'package:flutter/services.dart' show ByteData, rootBundle;
 
 
 void main() {
-  runApp(Charts());
+  runApp(Load());
 }
 
 class PlotData {
@@ -19,25 +20,37 @@ class PlotData {
 
 
 class Charts extends StatefulWidget {
-  const Charts({Key? key}) : super(key: key);
+  //const Charts({Key? key}) : super(key: key);
+
+  String filePath;
+  Charts(this.filePath);
+
 
   @override
-  State<Charts> createState() => _ChartsState();
+  State<Charts> createState() => _ChartsState(filePath);
 }
 
 class _ChartsState extends State<Charts> {
 
-
+  String filePath;
+  _ChartsState(this.filePath);
 
   List<PlotData> Plottingdata = [];
-
   Map<dynamic,dynamic> temp = {};
 
-  void getData() async {
 
-    ByteData data = await rootBundle.load('assets/Financial_Sample.xlsx');
-    var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
+  void getData() async {
+    print(filePath);
+
+    var file = filePath;
+    var bytes = File(file).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
+
+
+    // ByteData data = await rootBundle.load('assets/Financial_Sample.xlsx');
+    // var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    // var excel = Excel.decodeBytes(bytes);
 
     for (var table in excel.tables.keys) {
       // print(table); //sheet Name
