@@ -38,10 +38,18 @@ class _ChartsState extends State<Charts> {
   List<PlotData> Plottingdata = [];
   Map<dynamic,dynamic> temp = {};
 
+  List<String> selCoulmn =[];
+  Map<String,int> mapCoulmn = {};
+  String xaxis="";
+  String yaxis="";
+
+  int xaxisdata = 1;
+  int yaxisdata = 4;
 
 
-  void getData() async {
-    print(filePath);
+
+  void getData(int x , int y) async {
+    //print(filePath);
 
     var file = filePath;
     var bytes = File(file).readAsBytesSync();
@@ -52,17 +60,38 @@ class _ChartsState extends State<Charts> {
     // var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     // var excel = Excel.decodeBytes(bytes);
 
+
+    //print("check 0");
+    Plottingdata = [];
+    temp = {};
+    selCoulmn =[];
+    mapCoulmn = {};
+    //making coulmn name list
+    int? maxCol = excel.tables["Sheet1"]?.maxCols;
+    for(int i=0;i<maxCol! ; i++){
+      selCoulmn.add((excel.tables["Sheet1"]?.rows[0][i]?.value).toString());
+    }
+    for(int i=0;i<selCoulmn.length;i++){
+      //print(selCoulmn[i]);
+      mapCoulmn[selCoulmn[i]] = i;
+    }
+    /*xaxis = selCoulmn[x];
+    yaxis = selCoulmn[y];
+
+    int xaxisdata = mapCoulmn[xaxis] ?? 1;
+    int yaxisdata = mapCoulmn[yaxis] ?? 4;*/
+
+
     for (var table in excel.tables.keys) {
-      // print(table); //sheet Name
+      //print(table); //sheet Name
       // print(excel.tables[table]?.maxCols);
       // print(excel.tables[table]?.maxRows);
       for (var row in excel.tables[table]!.rows) {
-
         //checking and adding each value to map to remove redundancy
-        if(temp[row[1]!.value] == null){
-          temp[row[1]!.value] = row[7]!.value;
+        if(temp[row[x]!.value] == null){
+          temp[row[x]!.value] = row[y]!.value;
         }else{
-          temp.update(row[1]!.value, (thisvalue) => thisvalue + row[7]!.value);
+          temp.update(row[x]!.value, (thisvalue) => thisvalue + row[y]!.value);
         }
 
 
@@ -78,11 +107,11 @@ class _ChartsState extends State<Charts> {
       //print(temp);
       print("check1");
       Plottingdata.removeAt(0); //IMP REMOVE HEADING DATA FROM LIST SO IT CAN BE PLOTTED
-      print("check2");
-      for(var data in Plottingdata){
-        print(data.name);
-        print(data.population);
-      }
+      // print("check2");
+      // for(var data in Plottingdata){
+      //   print(data.name);
+      //   print(data.population);
+      // }
     }
 
   }
@@ -90,39 +119,86 @@ class _ChartsState extends State<Charts> {
 
   @override
   void initState(){
-    getData();
-    print("hi");
+    getData(xaxisdata,yaxisdata);
+    //print("hi");
     super.initState();
   }
+
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       // Scaffold Widget
         home: Scaffold(
             body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(0.0),
-                  child: Container(
-                      child: SfCartesianChart(
-                        // Initialize category axis
-                          primaryXAxis: CategoryAxis(),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                          child: SfCartesianChart(
+                            // Initialize category axis
+                              primaryXAxis: CategoryAxis(),
 
-                          series: <LineSeries<PlotData, dynamic>>[
-                            LineSeries<PlotData, dynamic>(
-                              // Bind data source
-                                 dataSource:
-                              //   <PlotData>[
-                              //     PlotData('Jan', 35),
-                              //     PlotData('Feb', 28),
-                              //
-                              //   ],
-                              Plottingdata,
-                                xValueMapper: (PlotData myplot, _) => myplot.name,
-                                yValueMapper: (PlotData myplot, _) => myplot.population
-                            )
-                          ]
-                      )
-                  ),
+                              series: <LineSeries<PlotData, dynamic>>[
+                                LineSeries<PlotData, dynamic>(
+                                  // Bind data source
+                                     dataSource:
+                                  //   <PlotData>[
+                                  //     PlotData('Jan', 35),
+                                  //     PlotData('Feb', 28),
+                                  //
+                                  //   ],
+                                  Plottingdata,
+                                    xValueMapper: (PlotData myplot, _) => myplot.name,
+                                    yValueMapper: (PlotData myplot, _) => myplot.population
+                                )
+                              ]
+                          )
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(150, 0, 16, 0),
+                      child: Row(
+                        children: [
+                          DropdownButton(value: selCoulmn[xaxisdata],
+                            items: selCoulmn.map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(), onChanged:(String? value) {
+                            // This is called when the user selects an item.
+                            setState(() {
+                              xaxis = value!;
+                              xaxisdata = mapCoulmn[xaxis] ?? 1;
+                            });
+                          },),
+                          DropdownButton(
+                            onChanged:(String? value) {
+                              // This is called when the user selects an item.
+                              setState(() {
+                                yaxis = value!;
+                                yaxisdata = mapCoulmn[yaxis] ?? 4;
+                              });
+                            },
+                            items: selCoulmn.map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                            value: selCoulmn[yaxisdata],
+                            ),
+                          ElevatedButton(onPressed: (){
+                            setState(() {
+                              getData(xaxisdata,yaxisdata);
+                            });
+                          }, child: Text("Refresh"))
+                        ],
+                      ),
+                    )
+                  ],
                 )
             )
         )
