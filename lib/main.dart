@@ -134,7 +134,7 @@ class _ChartsState extends State<Charts> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(14.0),
                       child: Container(
                           child: SfCartesianChart(
                             // Initialize category axis
